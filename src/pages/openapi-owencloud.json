@@ -1,8 +1,8 @@
 {
   "openapi": "3.0.1",
   "info": {
-    "title": "Owencloud",
-    "description": "API предназначено для доступа к имеющимся в системе данным. В качестве основного формата вывода применяется JSON, однако клиент также может запросить данные в формате XML указав заголовок Accept: application/xml. Для аутентификации пользователей в API применяются access tokens, передаваемые в заголовке согласно спецификации OAuth 2. На начальном этапе эксплуатации API для получения токена используется отдельный метод API. Требуемое действие определяется через HTTP Verb POST, семантика действия описывается в документации. Не описанные действия считаются невалидными. Результат выполнения каждого метода возвращается в HTTP Status Code, в случае ошибки также выдается текстовое описание случившейся ошибки. Дополнительные входные параметры метода передаются в теле запроса (в таком случае оно должно быть валидным JSON-объектом). Структура объекта описывается отдельно для каждого метода.",
+    "title": "OwenCloud API",
+    "description": "<p>API предназначено для доступа к имеющимся в системе данным. В качестве основного формата вывода применяется JSON, однако клиент также может запросить данные в формате XML указав заголовок Accept: application/xml.</p><p>Для аутентификации пользователей в API применяются access tokens, передаваемые в заголовке согласно спецификации OAuth 2. На начальном этапе эксплуатации API для получения токена используется отдельный метод API.</p><p>Требуемое действие определяется через HTTP Verb POST, семантика действия описывается в документации. Не описанные действия считаются невалидными. Результат выполнения каждого метода возвращается в HTTP Status Code, в случае ошибки также выдается текстовое описание случившейся ошибки. Дополнительные входные параметры метода передаются в теле запроса (в таком случае оно должно быть валидным JSON-объектом). Структура объекта описывается отдельно для каждого метода.</p><p>В любом методе API в JSON-объекте запроса можно указать поле language, которое будет обозначать требуемый при получении данных язык. В поле должен находиться идентификатор языка в виде en-US. Если запрошенный язык не поддерживается или в запросе язык не указан, будет использован язык по умолчанию (ru-RU). Также, в локализуемых полях при отсутствии перевода на текущий язык приложения, будет выдаваться значение для языка по умолчанию.</p>",
     "contact": {
       "name": "Owen support center",
       "email": "support@owen.ru"
@@ -24,6 +24,10 @@
   ],
   "tags": [
     {
+      "name": "auth",
+      "description": "Аутентификация, регистрация и обновление пароля"
+    },
+    {
       "name": "device",
       "description": "Everything about your devices"
     },
@@ -33,6 +37,349 @@
     }
   ],
   "paths": {
+    "/auth/open": {
+      "post": {
+        "tags": ["auth"],
+        "summary": "Аутентификация",
+        "description": "<p>В параметрах передаётся логин и пароль пользователя, от имени которого требуется получить доступ к системе. В ответе выдаётся токен (сам токен хранится в MariaDB), который в дальнейшем передается в заголовке каждого следующего запроса к системе. Также в ответе присутствует имя и фамилия пользователя, совершившего вход. Для доступа может использоваться токен, взятый из личного кабинета пользователя. Токен, полученный через логин-пароль через 20 минут неактивности (отсутствия запросов) инвалидируется и удаляется из БД.</p>",
+        "operationId": "authOpen",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "required": [
+                  "login",
+                  "password"
+                ],
+                "type": "object",
+                "properties": {
+                  "login": {
+                    "type": "string",
+                    "format": "email",
+                    "description": "логин пользователя",
+                    "example": "v.pupkin@owen.ru"
+                  },
+                  "password": {
+                    "type": "string",
+                    "format": "password",
+                    "description": "пароль пользователя",
+                    "example": "**********"
+                  }
+                }
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "<ul>\n\t<li>token - токен для авторизации</li>\n\t<li>name - имя юзера</li>\n\t<li>surname - фамилия юзера</li>\n\t<li>company_name - название компании юзера</li>\n\t<li>domain_name - доменное имя, к которому относится пользователь</li>\n\t<li>canManageDevices - имеет ли пользователь роль «Управляющий приборами» для своей компании</li>\n\t<li>canManageCommands - имеет ли пользователь роль «Управляющий командами» для своей компании</li>\n\t<li>smsConfirmation - включен ли флаг необходимости SMS–подтверждения компании пользователя</li>\n\t<li>error_status - статус запроса. 0 - запрос выполнен без ошибок, 1 - ошибка авторизации, 2 - почта не подтверждена</li>\n</ul>\n",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "token": {
+                      "type": "string",
+                      "example": "C_etshQbOB1nAzMQaxgNqjHDizvzvRyI"
+                    },
+                    "name": {
+                      "type": "string",
+                      "example": "Admin"
+                    },
+                    "surname": {
+                      "type": "string",
+                      "example": "Adminov"
+                    },
+                    "company_name": {
+                      "type": "string",
+                      "example": "Owen"
+                    },
+                    "domain_name": {
+                      "type": "string",
+                      "example": "web.owencloud.ru"
+                    },
+                    "canManageDevices": {
+                      "type": "bool",
+                      "example": true
+                    },
+                    "canManageCommands": {
+                      "type": "bool",
+                      "example": true
+                    },
+                    "smsConfirmation": {
+                      "type": "bool",
+                      "example": false
+                    },
+                    "error_status": {
+                      "type": "int",
+                      "example": 0
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/auth/init-sign-up": {
+      "post": {
+        "tags": ["auth"],
+        "summary": "Инициализация регистрации",
+        "description": "<p>Начинает процесс регистрации компании/пользователя. Капча, которая получена от auth/init-sign-up, действительна в течение 5 минут. По истечении этого времени следует инициализировать регистрацию заново.</p>",
+        "operationId": "authInitSignUp",
+        "responses": {
+          "200": {
+            "description": "<ul><li>requestId - ID запроса, с которым пользователь обращается к регистрации</li><li>captchaBase64 - капча, закодированная в base64, для вывода пользователю декодируем</li></ul>",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "requestId": {
+                      "type": "int",
+                      "example": "14"
+                    },
+                    "captchaBase64": {
+                      "type": "string",
+                      "example": "data:image/png;base64,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"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/auth/sign-up": {
+      "post": {
+        "tags": ["auth"],
+        "summary": "Регистрация",
+        "description": "<p>Регистрации нового пользователя. Пользователь регистрируется как физическое лицо/индивидуальный предприниматель (см. регистрацию на сайте).</p>\n\t<p>Капча, которая получена от auth/init-sign-up, действительна в течение 5 минут! По истечении этого времени\n\t\tследует инициализировать регистрацию заново.</p>\n\t<p>После успешной регистрации на указанную почту будет отправлено письмо со ссылкой для активации через\n\t\tсайт и код доступа для подтверждения почты через метод auth/confirm-email.</p>\n\t<p>\n\t<a target=\"_blank\" href=\"https://dev-web.owencloud.ru/site/agreement\">Лицензионное соглашение</a> и\n\t<a target=\"_blank\" href=\"https://dev-web.owencloud.ru/site/privacy-policy\">политика конфиденциальности</a> должны быть приняты, иначе пользователь не будет зарегистрирован.</p>",
+        "operationId": "authSignUp",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "required": [
+                  "verifyCode",
+                  "email",
+                  "password",
+                  "password_confirm",
+                  "name",
+                  "surname",
+                  "acceptAgreement"
+                ],
+                "type": "object",
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "description": "имя пользователя",
+                    "example": "Иван"
+                  },
+                  "surname": {
+                    "type": "string",
+                    "description": "фамилия пользователя",
+                    "example": "Петров"
+                  },
+                  "patronymic": {
+                    "type": "string",
+                    "description": "отчество пользователя",
+                    "example": "Васильевич"
+                  },
+                  "email": {
+                    "type": "string",
+                    "format": "email",
+                    "description": "адрес электронной почты",
+                    "example": "i.petrov@company.ru"
+                  },
+                  "phone": {
+                    "type": "string",
+                    "format": "7xxxxxxxxxxx",
+                    "description": "номер телефона пользователя",
+                    "example": "79654321212"
+                  },
+                  "skype": {
+                    "type": "string",
+                    "description": "skype пользователя",
+                    "example": "i_petrov"
+                  },
+                  "password": {
+                    "type": "string",
+                    "description": "пароль",
+                    "example": "********"
+                  },
+                  "password_confirm": {
+                    "type": "string",
+                    "description": "подтверждение пароля",
+                    "example": "********"
+                  },
+                  "individualTaxpayerNumber": {
+                    "type": "string",
+                    "description": "ИНН физического лица",
+                    "example": "123456789012"
+                  },
+                  "individualCompanyName": {
+                    "type": "string",
+                    "description": "название компании или группы лиц",
+                    "example": "ИП Петров Иван Васильевич"
+                  },
+                  "verifyCode": {
+                    "type": "string",
+                    "description": "код капчи",
+                    "example": "dfevu"
+                  },
+                  "requestId": {
+                    "type": "integer",
+                    "description": "id запроса, полученный ранее при обращении к auth/init-sign-up",
+                    "example": "535"
+                  },
+                  "acceptAgreement": {
+                    "type": "bool",
+                    "description": "допустимо значение 1. во всех остальных случаях соглашение считается непринятым и регистрация прервётся.",
+                    "example": "1"
+                  }
+                }
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "<ul><li>requestId - ID запроса, с которым пользователь обращается к регистрации</li><li>captchaBase64 - капча, закодированная в base64, для вывода пользователю декодируем</li></ul>",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "int",
+                      "description": "Статус выполнения запроса",
+                      "example": "success"
+                    },
+                    "description": {
+                      "type": "string",
+                      "description": "Описание статуса",
+                      "example": "Для продолжения регистрации следуйте инструкциям, отправленным на указанную почту."
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/auth/resend-signup-email/{email}": {
+      "post": {
+        "tags": ["auth"],
+        "operationId": "authResendSignupEmail",
+        "summary": "Повторно отправляет пользователю письмо для подтверждения почты",
+        "description": "В письме будет ссылка для активации через сайт и код доступа для подтверждения почты через метод auth/confirm-email.",
+        "parameters": [
+          {
+            "name": "email",
+            "in": "path",
+            "description": "адрес электронной почты пользователя",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "email",
+              "example": "i.petrov@company.ru"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "<ul><li>requestId - ID запроса, с которым пользователь обращается к регистрации</li><li>captchaBase64 - капча, закодированная в base64, для вывода пользователю декодируем</li></ul>",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "int",
+                      "description": "Статус выполнения запроса",
+                      "example": "success"
+                    },
+                    "description": {
+                      "type": "string",
+                      "description": "Описание статуса",
+                      "example": "Для продолжения регистрации следуйте инструкциям, отправленным на указанную почту."
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/auth/confirm-email": {
+      "post": {
+        "tags": ["auth"],
+        "operationId": "authConfirmEmail",
+        "summary": "Подтверждение почты",
+        "description": "<p>Подтверждает почту пользователя, зарегистрированного через auth/sign-up. После подтверждения почты пользователь получает доступ к сервису.</p>",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "required": [
+                  "email",
+                  "accessCode"
+                ],
+                "type": "object",
+                "properties": {
+                  "email": {
+                    "type": "string",
+                    "format": "email",
+                    "description": "адрес электронной почты",
+                    "example": "i.petrov@company.ru"
+                  },
+                  "accessCode": {
+                    "type": "string",
+                    "description": "код доступа, полученный в письме по запросу auth/sign-up. Действителен в течение 5 минут.",
+                    "example": "TBN2NU"
+                  }
+                }
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "<ul><li>requestId - ID запроса, с которым пользователь обращается к регистрации</li><li>captchaBase64 - капча, закодированная в base64, для вывода пользователю декодируем</li></ul>",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "int",
+                      "description": "Статус выполнения запроса",
+                      "example": "success"
+                    },
+                    "description": {
+                      "type": "string",
+                      "description": "Описание статуса",
+                      "example": "Для продолжения регистрации следуйте инструкциям, отправленным на указанную почту."
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+
+    "/here will be passwords block": "",
+
     "/device": {
       "put": {
         "tags": [
@@ -794,11 +1141,7 @@
         "type": "oauth2",
         "flows": {
           "implicit": {
-            "authorizationUrl": "https://web.owencloud.ru/auth/open",
-            "scopes": {
-              "write:devices": "modify devices in your account",
-              "read:devices": "read your devices"
-            }
+            "authorizationUrl": "https://web.owencloud.ru/auth/open"
           }
         }
       },
