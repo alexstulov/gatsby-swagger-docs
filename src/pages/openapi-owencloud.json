@@ -24,8 +24,17 @@
   ],
   "tags": [
     {
-      "name": "auth",
-      "description": "Аутентификация, регистрация и обновление пароля"
+      "name": "Аутентификация",
+      "description": ""
+    },
+    {
+      "name": "Регистрация",
+      "description": "Блок методов для регистрации нового пользователя"
+    },
+    {
+
+      "name": "Изменение пароля",
+      "description": "Блок методов для изменения пароля пользователя"
     },
     {
       "name": "device",
@@ -39,7 +48,7 @@
   "paths": {
     "/auth/open": {
       "post": {
-        "tags": ["auth"],
+        "tags": ["Аутентификация"],
         "summary": "Аутентификация",
         "description": "<p>В параметрах передаётся логин и пароль пользователя, от имени которого требуется получить доступ к системе. В ответе выдаётся токен (сам токен хранится в MariaDB), который в дальнейшем передается в заголовке каждого следующего запроса к системе. Также в ответе присутствует имя и фамилия пользователя, совершившего вход. Для доступа может использоваться токен, взятый из личного кабинета пользователя. Токен, полученный через логин-пароль через 20 минут неактивности (отсутствия запросов) инвалидируется и удаляется из БД.</p>",
         "operationId": "authOpen",
@@ -123,15 +132,15 @@
         }
       }
     },
+
     "/auth/init-sign-up": {
       "post": {
-        "tags": ["auth"],
+        "tags": ["Регистрация"],
         "summary": "Инициализация регистрации",
         "description": "<p>Начинает процесс регистрации компании/пользователя. Капча, которая получена от auth/init-sign-up, действительна в течение 5 минут. По истечении этого времени следует инициализировать регистрацию заново.</p>",
         "operationId": "authInitSignUp",
         "responses": {
           "200": {
-            "description": "<ul><li>requestId - ID запроса, с которым пользователь обращается к регистрации</li><li>captchaBase64 - капча, закодированная в base64, для вывода пользователю декодируем</li></ul>",
             "content": {
               "application/json": {
                 "schema": {
@@ -139,10 +148,12 @@
                   "properties": {
                     "requestId": {
                       "type": "int",
+                      "description": "ID запроса, с которым пользователь обращается к регистрации",
                       "example": "14"
                     },
                     "captchaBase64": {
                       "type": "string",
+                      "description": "капча, закодированная в base64, для вывода пользователю декодируем",
                       "example": "data:image/png;base64,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"
                     }
                   }
@@ -155,7 +166,7 @@
     },
     "/auth/sign-up": {
       "post": {
-        "tags": ["auth"],
+        "tags": ["Регистрация"],
         "summary": "Регистрация",
         "description": "<p>Регистрации нового пользователя. Пользователь регистрируется как физическое лицо/индивидуальный предприниматель (см. регистрацию на сайте).</p>\n\t<p>Капча, которая получена от auth/init-sign-up, действительна в течение 5 минут! По истечении этого времени\n\t\tследует инициализировать регистрацию заново.</p>\n\t<p>После успешной регистрации на указанную почту будет отправлено письмо со ссылкой для активации через\n\t\tсайт и код доступа для подтверждения почты через метод auth/confirm-email.</p>\n\t<p>\n\t<a target=\"_blank\" href=\"https://dev-web.owencloud.ru/site/agreement\">Лицензионное соглашение</a> и\n\t<a target=\"_blank\" href=\"https://dev-web.owencloud.ru/site/privacy-policy\">политика конфиденциальности</a> должны быть приняты, иначе пользователь не будет зарегистрирован.</p>",
         "operationId": "authSignUp",
@@ -275,7 +286,7 @@
     },
     "/auth/resend-signup-email/{email}": {
       "post": {
-        "tags": ["auth"],
+        "tags": ["Регистрация"],
         "operationId": "authResendSignupEmail",
         "summary": "Повторно отправляет пользователю письмо для подтверждения почты",
         "description": "В письме будет ссылка для активации через сайт и код доступа для подтверждения почты через метод auth/confirm-email.",
@@ -320,7 +331,7 @@
     },
     "/auth/confirm-email": {
       "post": {
-        "tags": ["auth"],
+        "tags": ["Регистрация"],
         "operationId": "authConfirmEmail",
         "summary": "Подтверждение почты",
         "description": "<p>Подтверждает почту пользователя, зарегистрированного через auth/sign-up. После подтверждения почты пользователь получает доступ к сервису.</p>",
@@ -361,6 +372,166 @@
                   "properties": {
                     "code": {
                       "type": "int",
+                      "description": "Статус выполнения запроса",
+                      "example": "success"
+                    },
+                    "description": {
+                      "type": "string",
+                      "description": "Описание статуса",
+                      "example": "Для продолжения регистрации следуйте инструкциям, отправленным на указанную почту."
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+
+    "/auth/init-password-reset": {
+      "post": {
+        "tags": ["Изменение пароля"],
+        "operationId": "authInitPasswordReset",
+        "summary": "Инициализация восстановления пароля",
+        "description": "<p>Начинает процесс восстановления пароля. Капча, которая получена от auth/init-password-reset, действительна в течение 5 минут! По истечении этого времени следует инициализировать восстановление пароля заново.</p><p>Параметры запроса:</p>",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "requestId": {
+                      "type": "int",
+                      "description": "ID запроса, с которым пользователь обращается к регистрации",
+                      "example": "14"
+                    },
+                    "captchaBase64": {
+                      "type": "string",
+                      "description": "капча, закодированная в base64, для вывода пользователю декодируем",
+                      "example": "data:image/png;base64,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"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/auth/reset-password": {
+      "post": {
+        "tags": ["Изменение пароля"],
+        "operationId": "authResetPassword",
+        "summary": "Запрос письма для восстановления пароля",
+        "description": "<p>Отправляет письмо с инструкциями и кодом доступа на адрес электронной почты, привязанной к аккаунту. Код доступа действителен в течение 5 минут.</p>",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "required": [
+                  "email",
+                  "verifyCode",
+                  "requestId"
+                ],
+                "type": "object",
+                "properties": {
+                  "email": {
+                    "type": "string",
+                    "format": "email",
+                    "description": "адрес электронной почты",
+                    "example": "i.petrov@company.ru"
+                  },
+                  "verifyCode": {
+                    "type": "string",
+                    "description": "код с капчи",
+                    "example": "ookdu"
+                  },
+                  "requestId": {
+                    "type": "int",
+                    "description": "id запроса, полученный ранее при обращении к auth/init-password-reset",
+                    "example": "94"
+                  }
+                }
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "string",
+                      "description": "Статус выполнения запроса",
+                      "example": "success"
+                    },
+                    "description": {
+                      "type": "string",
+                      "description": "Описание статуса",
+                      "example": "Для продолжения регистрации следуйте инструкциям, отправленным на указанную почту."
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/auth/update-password": {
+      "post": {
+        "tags": ["Изменение пароля"],
+        "operationId": "authUpdatePassword",
+        "summary": "Изменение пароля",
+        "description": "<p>Обновляет пароль пользователя по коду доступа, полученному в письме.</p>",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "required": [
+                  "email",
+                  "accessCode",
+                  "newPassword"
+                ],
+                "type": "object",
+                "properties": {
+                  "email": {
+                    "type": "string",
+                    "format": "email",
+                    "description": "адрес электронной почты",
+                    "example": "i.petrov@company.ru"
+                  },
+                  "accessCode": {
+                    "type": "string",
+                    "description": "код доступа, полученный в письме по запросу auth/reset-password. Действителен в течение 5 минут",
+                    "example": "TBN2NU"
+                  },
+                  "newPassword": {
+                    "type": "string",
+                    "description": "новый пароль пользователя",
+                    "example": "********"
+                  }
+                }
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "string",
                       "description": "Статус выполнения запроса",
                       "example": "success"
                     },
