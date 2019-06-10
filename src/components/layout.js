@@ -8,11 +8,12 @@
 import React from "react"
 import PropTypes from "prop-types"
 import { StaticQuery, graphql } from "gatsby"
+import { injectIntl } from "gatsby-plugin-intl"
 
 import Header from "./header"
 import "./layout.css"
 
-const Layout = ({ children }) => (
+const Layout = ({ children, intl }) => (
   <StaticQuery
     query={graphql`
       query SiteTitleQuery {
@@ -25,7 +26,7 @@ const Layout = ({ children }) => (
     `}
     render={data => (
       <>
-        <Header siteTitle={data.site.siteMetadata.title} />
+        <Header siteTitle={intl.formatMessage({ id: 'title' })} />
         <div
           style={{
             margin: `0 auto`,
@@ -50,4 +51,4 @@ Layout.propTypes = {
   children: PropTypes.node.isRequired,
 }
 
-export default Layout
+export default injectIntl(Layout)
